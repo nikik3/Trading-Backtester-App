@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { Upload, Play, Trash2, Plus, Database } from "lucide-react";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
+=======
+>>>>>>> f97a3af (Simplify app and improve local setup)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,11 +39,19 @@ interface StrategyRule {
 }
 
 const Trade = () => {
+<<<<<<< HEAD
   const navigate = useNavigate();
   const { addTrades, setPortfolioValue } = useTrading();
   const { result, setResult } = useBacktest();
   const [isLoading, setIsLoading] = useState(false);
   const [dataSource, setDataSource] = useState<"none" | "upload" | "sample">("none");
+=======
+  const { addTrades, setPortfolioValue } = useTrading();
+  const { result, setResult } = useBacktest();
+  const [, setIsLoading] = useState(false);
+  const [dataSource, setDataSource] = useState<"none" | "upload" | "sample">("none");
+  const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+>>>>>>> f97a3af (Simplify app and improve local setup)
   const [candlestickData, setCandlestickData] = useState<CandlestickData[]>([]);
   const [fileName, setFileName] = useState("");
   const [backtestRun, setBacktestRun] = useState(false);
@@ -174,7 +185,11 @@ const Trade = () => {
     }
 
     setIsLoading(true);
+<<<<<<< HEAD
   toast(`Backtest running — Processing ${candlestickData.length} rows for ${strategySymbol}`);
+=======
+    toast(`Backtest running — Processing ${candlestickData.length} rows for ${strategySymbol}`);
+>>>>>>> f97a3af (Simplify app and improve local setup)
 
     try {
       const form = new FormData();
@@ -199,7 +214,12 @@ const Trade = () => {
       };
       form.append('strategy', JSON.stringify(strategyPayload));
 
+<<<<<<< HEAD
       const resp = await fetch('http://localhost:8000/backtest', {
+=======
+      const endpoint = apiBaseUrl ? `${apiBaseUrl}/backtest` : "/api/backtest";
+      const resp = await fetch(endpoint, {
+>>>>>>> f97a3af (Simplify app and improve local setup)
         method: 'POST',
         body: form,
       });
