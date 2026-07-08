@@ -18,17 +18,10 @@ const Home = () => {
       <div className="relative overflow-hidden py-20 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-6xl font-bold mb-6">
-<<<<<<< HEAD
             <span className="text-gradient">Backtest</span> Your Trading Strategies
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
             Professional-grade backtesting platform for data-driven traders
-=======
-            <span className="text-gradient">Backtest</span> Your Trading Ideas
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-            A simple place to test strategies and review results.
->>>>>>> f97a3af (Simplify app and improve local setup)
           </p>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
@@ -72,7 +65,7 @@ const Home = () => {
           <h2 className="text-4xl font-bold mb-2">Trending Stocks</h2>
           <p className="text-muted-foreground text-lg">Real-time market movers</p>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trendingStocks.map((stock) => (
             <StockCard key={stock.symbol} {...stock} />

@@ -6,7 +6,6 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
@@ -14,28 +13,27 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
 
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* Path mapping */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
-<<<<<<< HEAD
-  "include": ["src"]
-=======
   "include": ["src"],
-  "exclude": ["src/components/ui/calendar.tsx", "src/components/ui/carousel.tsx", "src/components/ui/chart.tsx", "src/components/ui/command.tsx", "src/components/ui/drawer.tsx", "src/components/ui/form.tsx", "src/components/ui/input-otp.tsx", "src/components/ui/resizable.tsx", "src/components/ui/toggle-group.tsx", "src/components/ui/toggle.tsx"]
->>>>>>> f97a3af (Simplify app and improve local setup)
+  "exclude": [
+    "src/components/ui/calendar.tsx",
+    "src/components/ui/carousel.tsx",
+    "src/components/ui/chart.tsx",
+    "src/components/ui/command.tsx",
+    "src/components/ui/drawer.tsx",
+    "src/components/ui/form.tsx",
+    "src/components/ui/input-otp.tsx",
+    "src/components/ui/resizable.tsx",
+    "src/components/ui/toggle-group.tsx",
+    "src/components/ui/toggle.tsx"
+  ]
 }
