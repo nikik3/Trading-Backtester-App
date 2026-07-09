@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Trading Backtester</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/shared-stocks.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #181818;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #fff;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .summary-card {
+            background: #232323;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+        }
+
+        .card-content h3 {
+            font-size: 0.85rem;
+            color: #fff;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #FDB022;
+        }
+
+        .add-stock-section {
+            background: #232323;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-stock-section h2 {
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .stock-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            padding: 0.75rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: #333;
+            color: #fff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #FDB022;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FDB022 0%, #FFD700 100%);
+            color: #fff;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            max-width: 200px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(253, 176, 34, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: #232323;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 300px;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 1rem;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .table-section {
+            background: #232323;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-section h2 {
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #FDB022 0%, #FFD700 100%);
+            color: #fff;
+        }
+
+        thead th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #333;
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #333;
+        }
+
+        tbody td {
+            padding: 1rem;
+            color: #fff;
+        }
+
+        .stock-symbol {
+            font-weight: 700;
+            color: #FDB022;
+            font-size: 1.1rem;
+        }
+
+        .gain-positive {
+            color: #38a169;
+            font-weight: 600;
+        }
+
+        .gain-negative {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+
+        .btn-delete {
+            background: #fc8181;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            background: #f56565;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+        }
+
+        .back-section {
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #FDB022;
+            border: 2px solid #FDB022;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #FDB022;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);
+        }
+
+        .form-group select {
+            background: #232323;
+            color: #fff;
+            border: 1.5px solid #444;
+            border-radius: 10px;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            transition: border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 4px rgba(20,20,20,0.07);
+            cursor: pointer;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #FDB022;
+            box-shadow: 0 0 0 2px #FDB02222;
+        }
+
+        .form-group select:hover {
+            border-color: #FDB022;
+        }
+
+        .form-group select option {
+            background: #232323;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-group select option:checked {
+            background: #322e19;
+            color: #FDB022;
+        }
+
+        .form-group select::-ms-expand {
+            display: none;
+        }
+
+        .form-group.select-arrow:after {
+            content: '';
+            pointer-events: none;
+            position: absolute;
+            right: 1.1rem;
+            top: 65%;
+            transform: translateY(-50%);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 8px solid #FDB022;
+            height: 0;
+            width: 0;
+        }
+
+        .chart-empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 250px;
+            color: #FDB022;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 2px solid #333;
+                border-radius: 8px;
+            }
+
+            tbody td {
+                display: block;
+                text-align: right;
+                padding: 0.5rem 1rem;
+                border-bottom: 1px solid #333;
+            }
+
+            tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 600;
+                color: #fff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📈 My Portfolio</h1>
+            <p class="subtitle">Track your investments and performance</p>
+        </header>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="card-icon">💰</div>
+                <div class="card-content">
+                    <h3>Total Invested</h3>
+                    <p class="amount" id="totalInvested">$0.00</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <h3>Current Value</h3>
+                    <p class="amount" id="currentValue">$0.00</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="card-icon">📈</div>
+                <div class="card-content">
+                    <h3>Total Gain/Loss</h3>
+                    <p class="amount" id="totalGainLoss">$0.00</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="card-icon">📉</div>
+                <div class="card-content">
+                    <h3>Return %</h3>
+                    <p class="amount" id="returnPercent">0.00%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-stock-section">
+            <h2>Add Stock to Portfolio</h2>
+            <form id="stockForm" class="stock-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stockSymbol">Stock Symbol</label>
+                        <input type="text" id="stockSymbol" placeholder="e.g., AAPL" required>
+                    </div>
+                    <div class="form-group select-arrow">
+                        <label for="stockName">Company Name</label>
+                        <select id="stockName" required>
+                            <option value="">Select a company</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" placeholder="0" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="buyPrice">Buy Price ($)</label>
+                        <input type="number" id="buyPrice" placeholder="0.00" step="0.01" min="0.01" readonly>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Add Stock</button>
+            </form>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3>Portfolio Value Over Time</h3>
+                <canvas id="portfolioChart"></canvas>
+                <div id="portfolioChartEmpty" class="chart-empty-state" style="display: none;">
+                    Add a stock to see portfolio history!
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Asset Allocation</h3>
+                <canvas id="allocationChart"></canvas>
+                <div id="allocationChartEmpty" class="chart-empty-state" style="display: none;">
+                    Add stocks to see asset allocation!
+                </div>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2>Your Holdings</h2>
+            <div class="table-container">
+                <table id="stocksTable">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Company Name</th>
+                            <th>Quantity</th>
+                            <th>Buy Price</th>
+                            <th>Current Price</th>
+                            <th>Total Value</th>
+                            <th>Gain/Loss</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stocksTableBody">
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state">
+                    <p>No stocks added yet. Add your first stock above!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="back-section">
+            <button id="backButton" class="btn-secondary">← Back to Home</button>
+        </div>
+    </div>
+
+    <script>
+        let portfolioData = [];
+        let valueChartPoints = [];
+        let portfolioChart = null;
+        let allocationChart = null;
+
+        // Wait for sharedStocks to be available
+        function waitForSharedStocks(callback, attempts = 0) {
+            if (window.sharedStocks && Array.isArray(window.sharedStocks)) {
+                callback();
+            } else if (attempts < 50) {
+                setTimeout(() => waitForSharedStocks(callback, attempts + 1), 100);
+            } else {
+                alert('Failed to load stock data. Please reload the page.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            waitForSharedStocks(() => {
+                loadPortfolioFromMemory();
+                populateCompanyDropdown();
+                setupEventListeners();
+                renderPortfolio();
+                updateSummary();
+                renderCharts();
+                startPriceUpdates();
+                startPortfolioTracking();
+            });
+        });
+
+        function loadPortfolioFromMemory() {
+            const saved = localStorage.getItem('portfolioStocks');
+            if (saved) {
+                try {
+                    portfolioData = JSON.parse(saved);
+                } catch (e) {
+                    portfolioData = [];
+                }
+            }
+        }
+
+        function savePortfolioToMemory() {
+            localStorage.setItem('portfolioStocks', JSON.stringify(portfolioData));
+        }
+
+        function setupEventListeners() {
+            document.getElementById('stockForm').addEventListener('submit', handleAddStock);
+            document.getElementById('backButton').addEventListener('click', () => {
+                window.location.href = '/';
+            });
+            document.getElementById('stockName').addEventListener('change', function(e) {
+                const selectedSymbol = e.target.value;
+                const stock = window.sharedStocks.find(s => s.symbol === selectedSymbol);
+                if (stock) {
+                    document.getElementById('buyPrice').value = stock.price.toFixed(2);
+                    document.getElementById('stockSymbol').value = stock.symbol;
+                } else {
+                    document.getElementById('buyPrice').value = '';
+                    document.getElementById('stockSymbol').value = '';
+                }
+            });
+        }
+
+        function handleAddStock(e) {
+            e.preventDefault();
+            
+            const symbol = document.getElementById('stockSymbol').value.toUpperCase();
+            const name = document.getElementById('stockName').options[document.getElementById('stockName').selectedIndex].text;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+            
+            const existingIndex = portfolioData.findIndex(stock => stock.symbol === symbol);
+            
+            if (existingIndex >= 0) {
+                const existing = portfolioData[existingIndex];
+                const totalQuantity = existing.quantity + quantity;
+                const totalValue = (existing.buyPrice * existing.quantity) + (buyPrice * quantity);
+                portfolioData[existingIndex].buyPrice = totalValue / totalQuantity;
+                portfolioData[existingIndex].quantity = totalQuantity;
+            } else {
+                portfolioData.push({
+                    symbol,
+                    name,
+                    quantity,
+                    buyPrice,
+                    id: Date.now()
+                });
+            }
+            
+            savePortfolioToMemory();
+            renderPortfolio();
+            updateSummary();
+            renderCharts();
+            
+            document.getElementById('stockForm').reset();
+        }
+
+        function renderPortfolio() {
+            const tbody = document.getElementById('stocksTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (portfolioData.length === 0) {
+                emptyState.style.display = 'block';
+                tbody.innerHTML = '';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = portfolioData.map(stock => {
+                const curr = window.sharedStocks.find(s => s.symbol === stock.symbol);
+                const currentPrice = curr ? curr.price : stock.buyPrice;
+                const totalValue = stock.quantity * currentPrice;
+                const gainLoss = totalValue - (stock.quantity * stock.buyPrice);
+                const gainLossPercent = ((currentPrice - stock.buyPrice) / stock.buyPrice * 100);
+                
+                return `
+                    <tr>
+                        <td data-label="Symbol" class="stock-symbol">${stock.symbol}</td>
+                        <td data-label="Company">${stock.name}</td>
+                        <td data-label="Quantity">${stock.quantity}</td>
+                        <td data-label="Buy Price">$${stock.buyPrice.toFixed(2)}</td>
+                        <td data-label="Current Price">$${currentPrice.toFixed(2)}</td>
+                        <td data-label="Total Value">$${totalValue.toFixed(2)}</td>
+                        <td data-label="Gain/Loss" class="${gainLoss >= 0 ? 'gain-positive' : 'gain-negative'}">
+                            ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent >= 0 ? '+' : ''}${gainLossPercent.toFixed(2)}%)
+                        </td>
+                        <td data-label="Actions">
+                            <button class="btn-delete" onclick="removeStock(${stock.id})">Remove</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function removeStock(id) {
+            if (confirm('Are you sure you want to remove this stock from your portfolio?')) {
+                portfolioData = portfolioData.filter(stock => stock.id !== id);
+                savePortfolioToMemory();
+                renderPortfolio();
+                updateSummary();
+                renderCharts();
+            }
+        }
+
+        function updateSummary() {
+            let totalInvested = 0, currentValue = 0;
+            
+            portfolioData.forEach(stock => {
+                const curr = window.sharedStocks.find(s => s.symbol === stock.symbol);
+                const livePrice = curr ? curr.price : stock.buyPrice;
+                totalInvested += stock.quantity * stock.buyPrice;
+                currentValue += stock.quantity * livePrice;
+            });
+            
+            const totalGainLoss = currentValue - totalInvested;
+            const returnPercent = totalInvested > 0 ? (totalGainLoss / totalInvested * 100) : 0;
+            
+            document.getElementById('totalInvested').textContent = `$${totalInvested.toFixed(2)}`;
+            document.getElementById('currentValue').textContent = `$${currentValue.toFixed(2)}`;
+            
+            const gainLossElement = document.getElementById('totalGainLoss');
+            gainLossElement.textContent = `${totalGainLoss >= 0 ? '+' : ''}$${totalGainLoss.toFixed(2)}`;
+            gainLossElement.className = `amount ${totalGainLoss >= 0 ? 'gain-positive' : 'gain-negative'}`;
+            
+            const returnElement = document.getElementById('returnPercent');
+            returnElement.textContent = `${returnPercent >= 0 ? '+' : ''}${returnPercent.toFixed(2)}%`;
+            returnElement.className = `amount ${returnPercent >= 0 ? 'gain-positive' : 'gain-negative'}`;
+        }
+
+        function addPortfolioValuePoint() {
+            const value = portfolioData.reduce((sum, stock) => {
+                const curr = window.sharedStocks.find(s => s.symbol === stock.symbol);
+                return sum + stock.quantity * (curr ? curr.price : stock.buyPrice);
+            }, 0);
+            
+            valueChartPoints.unshift({
+                value,
+                label: valueChartPoints.length === 0 ? 'Now' : `${2 * valueChartPoints.length}s ago`
+            });
+            
+            if (valueChartPoints.length > 20) valueChartPoints.pop();
+        }
+
+        function renderCharts() {
+            renderPortfolioChart();
+            renderAllocationChart();
+        }
+
+        function renderPortfolioChart() {
+            const canvas = document.getElementById('portfolioChart');
+            const emptyState = document.getElementById('portfolioChartEmpty');
+            
+            if (portfolioData.length === 0 || valueChartPoints.length === 0) {
+                canvas.style.display = 'none';
+                emptyState.style.display = 'flex';
+                if (portfolioChart) {
+                    portfolioChart.destroy();
+                    portfolioChart = null;
+                }
+                return;
+            }
+            
+            canvas.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            const ctx = canvas.getContext('2d');
+            const labels = valueChartPoints.map(pt => pt.label).reverse();
+            const data = valueChartPoints.map(pt => pt.value).reverse();
+            
+            if (!portfolioChart) {
+                portfolioChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Portfolio Value',
+                            data: data,
+                            borderColor: '#FDB022',
+                            backgroundColor: 'rgba(253, 176, 34, 0.1)',
+                            pointBackgroundColor: '#FDB022',
+                            pointBorderColor: '#FDB022',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `$${context.parsed.y.toFixed(2)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    color: '#fff',
+                                    callback: (value) => '$' + value.toFixed(2)
+                                },
+                                grid: { color: '#333' }
+                            },
+                            x: {
+                                ticks: { color: '#fff' },
+                                grid: { color: '#333' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                portfolioChart.data.labels = labels;
+                portfolioChart.data.datasets[0].data = data;
+                portfolioChart.update('none');
+            }
+        }
+
+        function renderAllocationChart() {
+            const canvas = document.getElementById('allocationChart');
+            const emptyState = document.getElementById('allocationChartEmpty');
+            
+            if (portfolioData.length === 0) {
+                canvas.style.display = 'none';
+                emptyState.style.display = 'flex';
+                if (allocationChart) {
+                    allocationChart.destroy();
+                    allocationChart = null;
+                }
+                return;
+            }
+            
+            canvas.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            const ctx = canvas.getContext('2d');
+            const labels = portfolioData.map(stock => stock.symbol);
+            const values = portfolioData.map(stock => {
+                const curr = window.sharedStocks.find(s => s.symbol === stock.symbol);
+                return stock.quantity * (curr ? curr.price : stock.buyPrice);
+            });
+            
+            const colors = [
+                'rgba(253, 176, 34, 0.8)',
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)',
+                'rgba(255, 107, 107, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)'
+            ];
+            
+            if (!allocationChart) {
+                allocationChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors.slice(0, values.length),
+                            borderColor: '#232323',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#fff', padding: 15 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.label}: $${context.parsed.toFixed(2)}`
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                allocationChart.data.labels = labels;
+                allocationChart.data.datasets[0].data = values;
+                allocationChart.update('none');
+            }
+        }
+
+        function populateCompanyDropdown() {
+            const select = document.getElementById('stockName');
+            select.innerHTML = '<option value="">Select a company</option>';
+            
+            if (window.sharedStocks && Array.isArray(window.sharedStocks)) {
+                window.sharedStocks.forEach(stock => {
+                    const option = document.createElement('option');
+                    option.value = stock.symbol;
+                    option.textContent = `${stock.name} (${stock.symbol})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function priceDrift(stocks, pct) {
+            stocks.forEach(s => {
+                let oldPrice = s.price;
+                let drift = (Math.random() * 2 - 1) * s.price * pct;
+                s.price = Math.max(1, +(s.price + drift).toFixed(2));
+                s.change = +(s.price - oldPrice).toFixed(2);
+                s.changePercent = oldPrice > 0 ? +(100 * s.change / oldPrice).toFixed(2) : 0;
+            });
+        }
+
+        function updateUI() {
+            const sel = document.getElementById('stockName');
+            const buyInput = document.getElementById('buyPrice');
+            if (sel && buyInput && sel.value) {
+                const stock = window.sharedStocks.find(s => s.symbol === sel.value);
+                if (stock) {
+                    buyInput.value = stock.price.toFixed(2);
+                }
+            }
+            renderPortfolio();
+            updateSummary();
+            renderCharts();
+        }
+
+        function startPriceUpdates() {
+            setInterval(() => {
+                priceDrift(window.sharedStocks, 0.001);
+                updateUI();
+            }, 1000);
+        }
+
+        function startPortfolioTracking() {
+            setInterval(() => {
+                if (portfolioData.length > 0) {
+                    addPortfolioValuePoint();
+                    renderPortfolioChart();
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

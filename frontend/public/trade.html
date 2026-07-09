@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade - StockPlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #f5f7fa, #e8f0fe);
+            color: #1a1a2e;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 20px -4px rgba(26, 26, 46, 0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #1a1a2e;
+        }
+        
+        .data-source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .data-source-option {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .data-source-option:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .icon-box {
+            width: 3rem;
+            height: 3rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .chart-placeholder {
+            height: 400px;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #6b7280;
+        }
+        
+        .rule-builder {
+            background: rgba(229, 231, 235, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .rule-controls {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        input, select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">📈 StockPlay</div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="trade.html">Trade</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="basics.html">Basics</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Strategy Backtester</h1>
+        <p style="color: #6b7280; margin-bottom: 2rem;">Test your trading strategies with historical data</p>
+
+        <div class="card">
+            <h2>1. Choose Data Source</h2>
+            <div class="data-source-grid">
+                <div class="data-source-option">
+                    <div class="icon-box">📤</div>
+                    <h3 style="margin-bottom: 0.5rem;">Upload Your Data</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">CSV format required</p>
+                    <p style="color: #9ca3af; font-size: 0.75rem; margin-top: 1rem;">Format: Date, Open, High, Low, Close, Volume</p>
+                </div>
+                <div class="data-source-option">
+                    <div class="icon-box">💾</div>
+                    <h3 style="margin-bottom: 0.5rem;">Use Sample Data</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Pre-loaded demo data</p>
+                    <p style="color: #9ca3af; font-size: 0.75rem; margin-top: 1rem;">21 days of simulated market data</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Price Chart</h2>
+            <div class="chart-placeholder">📊 Chart will appear here after loading data</div>
+        </div>
+
+        <div class="card">
+            <h2>2. Define Entry & Exit Rules</h2>
+            <button class="btn btn-primary" style="margin-bottom: 1.5rem;">+ Add New Rule</button>
+            
+            <div class="rule-builder">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1rem;">Rule 1: Buy Signal</h3>
+                    <button class="btn" style="background: transparent; padding: 0.25rem;">🗑️</button>
+                </div>
+                <div class="rule-controls">
+                    <span style="color: #6b7280;">WHEN</span>
+                    <input type="text" placeholder="SMA(5)" value="SMA(5)" style="width: 120px;">
+                    <select style="width: 160px;">
+                        <option>crosses above</option>
+                        <option>crosses below</option>
+                    </select>
+                    <input type="text" placeholder="SMA(20)" value="SMA(20)" style="width: 120px;">
+                    <span style="color: #6b7280;">THEN</span>
+                    <button class="btn btn-primary">BUY</button>
+                </div>
+            </div>
+
+            <div class="rule-builder">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1rem;">Rule 2: Sell Signal</h3>
+                    <button class="btn" style="background: transparent; padding: 0.25rem;">🗑️</button>
+                </div>
+                <div class="rule-controls">
+                    <span style="color: #6b7280;">WHEN</span>
+                    <input type="text" placeholder="SMA(5)" value="SMA(5)" style="width: 120px;">
+                    <select style="width: 160px;">
+                        <option>crosses below</option>
+                        <option>crosses above</option>
+                    </select>
+                    <input type="text" placeholder="SMA(20)" value="SMA(20)" style="width: 120px;">
+                    <span style="color: #6b7280;">THEN</span>
+                    <button class="btn btn-danger">SELL</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">3. Set Parameters</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem;">Stock Symbol</label>
+                        <input type="text" value="AAPL" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem;">Short SMA Period</label>
+                        <input type="number" value="5" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem;">Long SMA Period</label>
+                        <input type="number" value="20" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin-bottom: 0.5rem;">5. Run Backtest</h2>
+                    <p style="color: #6b7280;">Strategy: SMA Crossover • Data: Sample Data</p>
+                </div>
+                <button class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">▶️ Run Strategy Backtest</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

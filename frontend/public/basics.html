@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basics - StockPlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #f5f7fa, #e8f0fe);
+            color: #1a1a2e;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 20px -4px rgba(26, 26, 46, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .icon-box {
+            width: 3rem;
+            height: 3rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .cta-card {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: rgba(229, 231, 235, 0.8);
+            color: #1a1a2e;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(229, 231, 235, 1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">📈 StockPlay</div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="trade.html">Trade</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="basics.html">Basics</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1><span class="gradient-text">Basics of Backtesting</span></h1>
+            <p style="font-size: 1.25rem; color: #6b7280;">
+                Learn the fundamentals of backtesting and how to validate your trading strategies with historical data
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">📖</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">What is Backtesting?</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75;">
+                    Backtesting is a method of evaluating a trading strategy by applying it to historical data to see how it would have performed. It's an essential tool for traders to validate their strategies before risking real capital in the market. By simulating trades on past market data, you can assess the viability of your strategy and make data-driven decisions.
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">📈</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">Understanding the Stock Market</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75;">
+                    The stock market is a platform where shares of publicly traded companies are bought and sold. Prices fluctuate based on supply and demand, influenced by company performance, economic indicators, and market sentiment. Understanding market dynamics, including trends, volatility, and liquidity, is crucial for developing effective trading strategies.
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">📊</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">Key Technical Indicators</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75; white-space: pre-line;">
+Technical indicators are mathematical calculations based on price, volume, or open interest. Common indicators include:
+
+• SMA (Simple Moving Average): Average price over a specific period
+• EMA (Exponential Moving Average): Weighted average giving more importance to recent prices
+• RSI (Relative Strength Index): Momentum oscillator measuring speed and magnitude of price changes
+• MACD (Moving Average Convergence Divergence): Trend-following momentum indicator
+• Bollinger Bands: Volatility indicator showing price range relative to moving average
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">🎯</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">How to Backtest Effectively</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75; white-space: pre-line;">
+Effective backtesting requires:
+
+1. Quality Data: Use accurate, complete historical data
+2. Clear Rules: Define precise entry and exit criteria
+3. Risk Management: Include position sizing and stop losses
+4. Realistic Assumptions: Account for slippage, commissions, and market impact
+5. Out-of-Sample Testing: Validate on data not used in strategy development
+6. Multiple Market Conditions: Test across bull, bear, and sideways markets
+7. Statistical Significance: Ensure sufficient trades for meaningful results
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">⚡</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">Common Backtesting Pitfalls</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75; white-space: pre-line;">
+Avoid these common mistakes:
+
+• Over-optimization: Curve-fitting to historical data
+• Look-ahead bias: Using information not available at the time
+• Survivorship bias: Only testing on stocks that still exist
+• Ignoring transaction costs: Forgetting commissions and slippage
+• Unrealistic assumptions: Assuming perfect execution
+• Small sample size: Drawing conclusions from too few trades
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="icon-box">🛡️</div>
+                <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">How StockPlay Helps</h2>
+            </div>
+            <div style="padding-left: 4rem;">
+                <p style="color: #6b7280; line-height: 1.75; white-space: pre-line;">
+StockPlay provides a professional backtesting platform designed to help you:
+
+• Upload and analyze historical market data easily
+• Build custom trading strategies with intuitive rule builders
+• Visualize performance with interactive charts and metrics
+• Test multiple indicators simultaneously
+• Generate comprehensive performance reports
+• Avoid common backtesting mistakes with built-in safeguards
+• Make informed decisions based on statistical evidence
+
+Our platform combines powerful analysis tools with an easy-to-use interface, making professional backtesting accessible to traders of all levels.
+                </p>
+            </div>
+        </div>
+
+        <div class="card cta-card">
+            <div class="cta-buttons">
+                <a href="trade.html" class="btn btn-primary">Start Backtesting</a>
+                <a href="portfolio.html" class="btn btn-secondary">View Portfolio</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

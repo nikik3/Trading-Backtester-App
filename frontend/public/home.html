@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - StockPlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #f5f7fa, #e8f0fe);
+            color: #1a1a2e;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .action-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px -4px rgba(26, 26, 46, 0.1);
+        }
+        
+        .action-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .action-card h3 {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            color: #1a1a2e;
+        }
+        
+        .action-card p {
+            color: #6b7280;
+        }
+        
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stock-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.3s;
+        }
+        
+        .stock-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .stock-symbol {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .stock-name {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .stock-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .positive {
+            color: #10b981;
+        }
+        
+        .negative {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">📈 StockPlay</div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="trade.html">Trade</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="basics.html">Basics</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1><span class="gradient-text">Backtest</span> Your Trading Strategies</h1>
+            <p>Professional-grade backtesting platform for data-driven traders</p>
+        </div>
+
+        <div class="action-grid">
+            <div class="action-card">
+                <div style="font-size: 2.5rem;">💼</div>
+                <h3>Portfolio</h3>
+                <p>View Performance</p>
+            </div>
+            <div class="action-card">
+                <div style="font-size: 2.5rem;">📊</div>
+                <h3>Trade</h3>
+                <p>Backtest Strategies</p>
+            </div>
+        </div>
+
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Trending Stocks</h2>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Real-time market movers</p>
+        
+        <div class="stock-grid">
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div>
+                        <div class="stock-symbol">AAPL</div>
+                        <div class="stock-name">Apple Inc.</div>
+                    </div>
+                    <div style="font-size: 1.5rem;">📈</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: end;">
+                    <div class="stock-price">$178.42</div>
+                    <div class="positive" style="font-family: 'Courier New', monospace; font-weight: bold;">+2.36%</div>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div>
+                        <div class="stock-symbol">TSLA</div>
+                        <div class="stock-name">Tesla Inc.</div>
+                    </div>
+                    <div style="font-size: 1.5rem;">📉</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: end;">
+                    <div class="stock-price">$242.84</div>
+                    <div class="negative" style="font-family: 'Courier New', monospace; font-weight: bold;">-1.21%</div>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-header">
+                    <div>
+                        <div class="stock-symbol">NVDA</div>
+                        <div class="stock-name">NVIDIA Corp.</div>
+                    </div>
+                    <div style="font-size: 1.5rem;">📈</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: end;">
+                    <div class="stock-price">$495.22</div>
+                    <div class="positive" style="font-family: 'Courier New', monospace; font-weight: bold;">+2.55%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
