@@ -12,6 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
+from s3_export import export_backtest_result
+
 # ----------------------------------------------------------------------
 # 1. Pydantic Models for Input and Output
 # ----------------------------------------------------------------------
@@ -43,6 +45,7 @@ class BacktestResult(BaseModel):
     return_percent: float = Field(..., alias="Return(%)", description="Total percentage return over the period.")
     volatility_percent: float = Field(..., alias="Volatility(%)", description="Annualized volatility of returns.")
     sharpe_ratio: float = Field(..., description="Sharpe Ratio (using risk-free rate of 0).")
+    max_drawdown_percent: float = Field(..., alias="Max Drawdown(%)", description="Maximum peak-to-trough equity decline.")
     max_trade_duration: str = Field(..., description="Maximum duration of a single trade.")
     avg_trade_duration: str = Field(..., alias="Avg. Trade Duration", description="Average duration of all trades.")
     no_of_trades: int = Field(..., alias="No. of trades", description="Total number of executed trades.")
@@ -50,6 +53,7 @@ class BacktestResult(BaseModel):
     strategy: str = Field(..., description="A summary of the strategy used.")
     trade_log: List[TradeLog] = Field(..., description="Detailed log of all trades executed.")
     equity_curve: List[EquityPoint] = Field(..., description="Array of equity curve points for graphing.")
+    s3_key: str | None = Field(None, description="S3 object key when results are exported.")
 
 
 # ----------------------------------------------------------------------
@@ -104,7 +108,12 @@ def execute_strategy(
     if strategy_type == "macd_crossover":
         df = calculate_macd(df, macd_fast_period, macd_slow_period, macd_signal_period)
         required_cols = ["MACD", "MACD_Signal"]
-        strategy_summary = "MACD Crossover"
+        strategy_summary = f"MACD Crossover ({macd_fast_period}/{macd_slow_period}/{macd_signal_period})"
+    elif strategy_type == "ema_crossover":
+        df[f"EMA_{sma_short_period}"] = calculate_ema(df, sma_short_period)
+        df[f"EMA_{sma_long_period}"] = calculate_ema(df, sma_long_period)
+        required_cols = [f"EMA_{sma_short_period}", f"EMA_{sma_long_period}"]
+        strategy_summary = f"EMA Crossover ({sma_short_period}/{sma_long_period})"
     elif strategy_type == "sma_rsi":
         df[f"SMA_{sma_short_period}"] = df["Close"].rolling(window=sma_short_period).mean()
         df[f"SMA_{sma_long_period}"] = df["Close"].rolling(window=sma_long_period).mean()
@@ -124,8 +133,11 @@ def execute_strategy(
         macd_sell_cross = (df["MACD"] < df["MACD_Signal"]) & (df["MACD"].shift(1) >= df["MACD_Signal"].shift(1))
         df.loc[macd_buy_cross, "Signal"] = 1.0
         df.loc[macd_sell_cross, "Signal"] = 0.0
-        # Hold position between crossover events
         df["Signal"] = df["Signal"].replace(0, np.nan).ffill().fillna(0.0)
+    elif strategy_type == "ema_crossover":
+        ema_short = df[f"EMA_{sma_short_period}"]
+        ema_long = df[f"EMA_{sma_long_period}"]
+        df["Signal"] = np.where(ema_short > ema_long, 1.0, 0.0)
     elif strategy_type == "sma_rsi":
         sma_short = df[f"SMA_{sma_short_period}"]
         sma_long = df[f"SMA_{sma_long_period}"]
@@ -220,13 +232,14 @@ def generate_equity_curve(df: pd.DataFrame, initial_capital: float = 100000, max
 
     equity_points = []
     df_reset = df.reset_index()
+    date_col = df_reset.columns[0]
 
     # Sample at regular intervals
     for i in range(0, total_rows, sample_interval):
         row = df_reset.iloc[i]
         equity_value = initial_capital * row['Equity_Curve']
         equity_points.append({
-            'date': row['Date'].strftime('%Y-%m-%d'),
+            'date': pd.Timestamp(row[date_col]).strftime('%Y-%m-%d'),
             'value': round(equity_value, 2)
         })
 
@@ -256,6 +269,7 @@ def calculate_metrics(df: pd.DataFrame, initial_capital: float = 100000, max_equ
             'Return(%)': 0.0,
             'Volatility(%)': 0.0,
             'sharpe_ratio': 0.0,
+            'Max Drawdown(%)': 0.0,
             'max_trade_duration': 'N/A',
             'Avg. Trade Duration': 'N/A', 
             'No. of trades': 0, 
@@ -279,6 +293,10 @@ def calculate_metrics(df: pd.DataFrame, initial_capital: float = 100000, max_equ
     std_dev_annualized = daily_returns.std() * np.sqrt(252)
     sharpe_ratio = annual_return / std_dev_annualized if std_dev_annualized else 0.0
 
+    equity_series = initial_capital * df['Equity_Curve']
+    running_peak = equity_series.cummax()
+    drawdowns = (equity_series - running_peak) / running_peak
+    max_drawdown_percent = abs(drawdowns.min()) * 100 if len(drawdowns) else 0.0
 
     # 2. Trade Analysis
     entries, exits = _pair_trades(df)
@@ -328,6 +346,7 @@ def calculate_metrics(df: pd.DataFrame, initial_capital: float = 100000, max_equ
         'Return(%)': round(total_return, 2),
         'Volatility(%)': round(annual_volatility, 2),
         'sharpe_ratio': round(sharpe_ratio, 3),
+        'Max Drawdown(%)': round(max_drawdown_percent, 2),
         'max_trade_duration': max_trade_duration,
         'Avg. Trade Duration': avg_trade_duration,
         'No. of trades': no_of_trades,
@@ -378,7 +397,7 @@ async def run_strategy_backtest(
     period_start: Annotated[str, Form(description="e.g., 2020-01-01")] = "1970-01-01",
     period_end: Annotated[str, Form(description="e.g., 2023-12-31")] = "2100-01-01",
     strategy: Annotated[str | None, Form(description="Optional strategy JSON from frontend")] = None,
-    strategy_type: Annotated[str, Form(description="sma_crossover | macd_crossover | sma_rsi")] = "sma_crossover",
+    strategy_type: Annotated[str, Form(description="sma_crossover | ema_crossover | macd_crossover | sma_rsi")] = "sma_crossover",
     sma_short_period: Annotated[int, Form(description="Short MA period (e.g., 5)")] = 5,
     sma_long_period: Annotated[int, Form(description="Long MA period (e.g., 20)")] = 20,
     rsi_window: Annotated[int, Form(description="RSI lookback period (e.g., 14)")] = 14,
@@ -448,8 +467,15 @@ async def run_strategy_backtest(
         # 2. Calculate final metrics (including trade log and equity curve)
         metrics = calculate_metrics(df_results, initial_capital, max_equity_points)
 
-        # 3. Package results for response
-        return BacktestResult(**metrics)
+        result = BacktestResult(**metrics)
+        try:
+            s3_key = export_backtest_result(result.model_dump(by_alias=True), stock_symbol or "backtest")
+            if s3_key:
+                result.s3_key = s3_key
+        except Exception as e:
+            print(f"S3 export failed: {e}")
+
+        return result
 
     except ValueError as e:
         # Handle data/period errors

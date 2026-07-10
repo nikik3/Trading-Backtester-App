@@ -22,20 +22,20 @@ const STEPS = [
   {
     step: "02",
     title: "Pick a strategy",
-    description: "Choose SMA crossover, MACD crossover, or SMA + RSI filter. Tune periods and starting capital.",
+    description: "Choose from SMA, EMA, MACD, or RSI-filtered crossover. Tune windows and starting capital per run.",
   },
   {
     step: "03",
     title: "Review results",
-    description: "See equity curve, Sharpe ratio, win rate, and a full trade log. Optionally compare against ML predictions.",
+    description: "See return, Sharpe ratio, max drawdown, equity curve, and trade log. ML comparison is optional.",
   },
 ];
 
 const STRATEGIES = [
-  { name: "SMA Crossover", detail: "Stay long when the short moving average is above the long moving average." },
+  { name: "SMA Crossover", detail: "Long when the short simple moving average is above the long SMA." },
+  { name: "EMA Crossover", detail: "Same crossover logic using exponential moving averages." },
   { name: "MACD Crossover", detail: "Enter and exit on MACD line crossing the signal line." },
-  { name: "SMA + RSI Filter", detail: "Trend-following with RSI overbought / oversold guards." },
-  { name: "ML Comparison", detail: "Logistic regression benchmark on a 70/30 holdout split (optional)." },
+  { name: "SMA + RSI Filter", detail: "Trend-following with RSI overbought guards." },
 ];
 
 const Home = () => {
@@ -104,7 +104,7 @@ const Home = () => {
           <FeatureCard
             icon={Upload}
             title="CSV & Sample Data"
-            description="Upload OHLC history or load thousands of sample bars from the API in one click."
+            description="Upload OHLC history or load the bundled sample dataset (~5,000 hourly bars)."
             tag="Data"
           />
           <FeatureCard
@@ -146,7 +146,7 @@ const Home = () => {
           <h2 className="text-3xl font-bold mb-2">Supported Strategies</h2>
           <p className="text-muted-foreground mb-8">
             Pick one on the Trade page, adjust parameters, and run. Metrics include return %, Sharpe ratio,
-            volatility, win rate, equity curve, and trade log.
+            max drawdown, volatility, win rate, equity curve, and trade log.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             {STRATEGIES.map((s) => (

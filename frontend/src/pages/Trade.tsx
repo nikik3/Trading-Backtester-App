@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { Upload, Play, Database, Brain, Loader2 } from "lucide-react";
+import { Upload, Play, Database, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "sonner";
-import { useTrading, Trade as TradeType } from "@/contexts/TradingContext";
 import { useBacktest } from "../context/BacktestContext";
 import {
   apiUrl,
@@ -28,16 +27,16 @@ import {
   type NormalizedBacktestResult,
 } from "@/utils/backtestApi";
 
-type StrategyType = "sma_crossover" | "macd_crossover" | "sma_rsi";
+type StrategyType = "sma_crossover" | "ema_crossover" | "macd_crossover" | "sma_rsi";
 
 const STRATEGY_LABELS: Record<StrategyType, string> = {
-  sma_crossover: "SMA Crossover — buy when short MA is above long MA",
-  macd_crossover: "MACD Crossover — buy/sell on MACD line crossing signal line",
-  sma_rsi: "SMA + RSI — SMA trend with RSI overbought filter",
+  sma_crossover: "SMA Crossover — long when short SMA is above long SMA",
+  ema_crossover: "EMA Crossover — same logic using exponential moving averages",
+  macd_crossover: "MACD Crossover — enter/exit on MACD crossing the signal line",
+  sma_rsi: "SMA + RSI — trend signal filtered by RSI overbought levels",
 };
 
 const Trade = () => {
-  const { addTrades, setPortfolioValue } = useTrading();
   const { result, setResult } = useBacktest();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSample, setIsLoadingSample] = useState(false);
@@ -47,13 +46,16 @@ const Trade = () => {
   const [candlestickData, setCandlestickData] = useState<CandlestickData[]>([]);
   const [fileName, setFileName] = useState("");
   const [backtestRun, setBacktestRun] = useState(false);
-  const [strategySymbol, setStrategySymbol] = useState("AAPL");
+  const [strategySymbol, setStrategySymbol] = useState("EURUSD");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [strategyType, setStrategyType] = useState<StrategyType>("sma_crossover");
   const [smaShortPeriod, setSmaShortPeriod] = useState(5);
   const [smaLongPeriod, setSmaLongPeriod] = useState(20);
   const [rsiWindow, setRsiWindow] = useState(14);
+  const [macdFast, setMacdFast] = useState(12);
+  const [macdSlow, setMacdSlow] = useState(26);
+  const [macdSignal, setMacdSignal] = useState(9);
   const [initialCapital, setInitialCapital] = useState(100000);
 
   const normalized = useMemo(() => {
@@ -63,7 +65,7 @@ const Trade = () => {
 
   const mlResult = normalized && isMLResponse(normalized) ? normalized : null;
   const activeResult: NormalizedBacktestResult | null = mlResult
-    ? (useML ? mlResult.ml_based : mlResult.rule_based)
+    ? mlResult.rule_based
     : (normalized as NormalizedBacktestResult | null);
 
   const priceChartData = useMemo(() => {
@@ -148,6 +150,9 @@ const Trade = () => {
       sma_short_period: smaShortPeriod,
       sma_long_period: smaLongPeriod,
       rsi_window: rsiWindow,
+      macd_fast_period: macdFast,
+      macd_slow_period: macdSlow,
+      macd_signal_period: macdSignal,
     };
     form.append("strategy", JSON.stringify(strategyPayload));
     form.append("strategy_type", strategyType);
@@ -155,6 +160,9 @@ const Trade = () => {
     form.append("sma_short_period", String(smaShortPeriod));
     form.append("sma_long_period", String(smaLongPeriod));
     form.append("rsi_window", String(rsiWindow));
+    form.append("macd_fast_period", String(macdFast));
+    form.append("macd_slow_period", String(macdSlow));
+    form.append("macd_signal_period", String(macdSignal));
     form.append("initial_capital", String(initialCapital));
   };
 
@@ -191,14 +199,15 @@ const Trade = () => {
       appendStrategyFields(form);
 
       const path = useML ? "/ml_backtest" : "/backtest";
+      const url = apiUrl(path, apiBaseUrl || undefined);
+
       if (!apiBaseUrl) {
-        throw new Error(
-          "Backend URL not configured. Set VITE_API_URL in Vercel to your Render URL (e.g. https://trading-backtester-app.onrender.com)."
-        );
+        toast.info("Using local API proxy at /api — start the backend with: uvicorn main:app --reload");
+      } else {
+        toast.info("Connecting to backend… (Render free tier may take up to 60s to wake up)");
       }
 
-      toast.info("Connecting to backend… (Render free tier may take up to 60s to wake up)");
-      const resp = await fetchWithTimeout(apiUrl(path, apiBaseUrl), { method: "POST", body: form });
+      const resp = await fetchWithTimeout(url, { method: "POST", body: form });
 
       if (!resp.ok) {
         let message = `Backtest failed (${resp.status})`;
@@ -216,31 +225,11 @@ const Trade = () => {
       setResult(json);
       setBacktestRun(true);
 
-      const metrics: NormalizedBacktestResult =
-        isMLResponse(parsed) && useML ? parsed.ml_based : isMLResponse(parsed) ? parsed.rule_based : parsed;
-
       toast.success(
         isMLResponse(parsed)
-          ? `Backtest complete — ML accuracy ${(parsed.accuracy * 100).toFixed(1)}%`
-          : "Backtest completed successfully"
+          ? `Done — ML direction accuracy ${(parsed.accuracy * 100).toFixed(1)}% on holdout`
+          : "Backtest complete"
       );
-
-      if (metrics.trade_log.length) {
-        const mapped: TradeType[] = metrics.trade_log.map((t) => ({
-          date: t.date,
-          type: t.type.toUpperCase() as "BUY" | "SELL",
-          symbol: strategySymbol,
-          price: t.price,
-          shares: 100,
-          pnl: t.pnl,
-          cumulativePnl: t.cumulative_pnl,
-        }));
-        addTrades(mapped);
-      }
-
-      if (metrics.equity_final) {
-        setPortfolioValue(metrics.equity_final);
-      }
 
       setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 100);
     } catch (err: unknown) {
@@ -257,8 +246,7 @@ const Trade = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Strategy Backtester</h1>
           <p className="text-muted-foreground max-w-2xl">
-            Load historical OHLC data, pick a strategy, and simulate how it would have performed.
-            The optional ML mode trains a logistic regression model on indicators and compares it to the rule-based strategy.
+            Upload OHLC data or load the sample set, choose a strategy, and run.
           </p>
         </div>
 
@@ -402,27 +390,35 @@ const Trade = () => {
               />
             </div>
 
-            <div>
-              <Label>Short SMA Period</Label>
-              <Input
-                className="mt-1"
-                type="number"
-                min={2}
-                value={smaShortPeriod}
-                onChange={(e) => setSmaShortPeriod(Number(e.target.value) || 5)}
-              />
-            </div>
+            {(strategyType === "sma_crossover" || strategyType === "ema_crossover" || strategyType === "sma_rsi") && (
+              <>
+                <div>
+                  <Label>
+                    {strategyType === "ema_crossover" ? "Short EMA Period" : "Short SMA Period"}
+                  </Label>
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    min={2}
+                    value={smaShortPeriod}
+                    onChange={(e) => setSmaShortPeriod(Number(e.target.value) || 5)}
+                  />
+                </div>
 
-            <div>
-              <Label>Long SMA Period</Label>
-              <Input
-                className="mt-1"
-                type="number"
-                min={3}
-                value={smaLongPeriod}
-                onChange={(e) => setSmaLongPeriod(Number(e.target.value) || 20)}
-              />
-            </div>
+                <div>
+                  <Label>
+                    {strategyType === "ema_crossover" ? "Long EMA Period" : "Long SMA Period"}
+                  </Label>
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    min={3}
+                    value={smaLongPeriod}
+                    onChange={(e) => setSmaLongPeriod(Number(e.target.value) || 20)}
+                  />
+                </div>
+              </>
+            )}
 
             {strategyType === "sma_rsi" && (
               <div>
@@ -435,6 +431,41 @@ const Trade = () => {
                   onChange={(e) => setRsiWindow(Number(e.target.value) || 14)}
                 />
               </div>
+            )}
+
+            {strategyType === "macd_crossover" && (
+              <>
+                <div>
+                  <Label>MACD Fast</Label>
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    min={2}
+                    value={macdFast}
+                    onChange={(e) => setMacdFast(Number(e.target.value) || 12)}
+                  />
+                </div>
+                <div>
+                  <Label>MACD Slow</Label>
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    min={3}
+                    value={macdSlow}
+                    onChange={(e) => setMacdSlow(Number(e.target.value) || 26)}
+                  />
+                </div>
+                <div>
+                  <Label>Signal Line</Label>
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    min={2}
+                    value={macdSignal}
+                    onChange={(e) => setMacdSignal(Number(e.target.value) || 9)}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -449,21 +480,18 @@ const Trade = () => {
                 {dataSource !== "none" && ` • ${candlestickData.length} bars loaded`}
               </p>
 
-              <div className="flex items-start gap-3 p-4 bg-secondary/30 rounded-lg max-w-lg">
-                <Brain className="w-5 h-5 text-accent mt-0.5 shrink-0" />
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <Switch id="use-ml" checked={useML} onCheckedChange={setUseML} />
-                    <Label htmlFor="use-ml" className="cursor-pointer font-medium">
-                      Compare with ML (Logistic Regression)
-                    </Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Trains on 70% of data using SMA, EMA, RSI, MACD features. Tests on remaining 30%
-                    and overlays ML equity vs rule-based SMA crossover. Needs ~80+ data points.
-                  </p>
-                </div>
+              <div className="flex items-center gap-3 mb-4">
+                <Switch id="use-ml" checked={useML} onCheckedChange={setUseML} />
+                <Label htmlFor="use-ml" className="cursor-pointer">
+                  ML comparison (logistic regression on last 30% of data)
+                </Label>
               </div>
+              {useML && (
+                <p className="text-xs text-muted-foreground max-w-lg">
+                  Compares SMA crossover vs a model trained on SMA, EMA, RSI, and MACD features.
+                  Toggle the equity chart legend to switch views. Needs 80+ rows.
+                </p>
+              )}
             </div>
 
             <Button
@@ -481,6 +509,31 @@ const Trade = () => {
         {/* Results */}
         {backtestRun && activeResult && (
           <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="card-glass rounded-xl p-5 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Total Return</p>
+                <p className={`text-2xl font-bold font-mono ${activeResult.return_percent >= 0 ? "text-success" : "text-destructive"}`}>
+                  {activeResult.return_percent >= 0 ? "+" : ""}{activeResult.return_percent.toFixed(2)}%
+                </p>
+              </div>
+              <div className="card-glass rounded-xl p-5 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Sharpe Ratio</p>
+                <p className="text-2xl font-bold font-mono">{activeResult.sharpe_ratio.toFixed(2)}</p>
+              </div>
+              <div className="card-glass rounded-xl p-5 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Max Drawdown</p>
+                <p className="text-2xl font-bold font-mono text-destructive">
+                  -{activeResult.max_drawdown_percent.toFixed(2)}%
+                </p>
+              </div>
+              <div className="card-glass rounded-xl p-5 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Final Equity</p>
+                <p className="text-2xl font-bold font-mono text-success">
+                  ${activeResult.equity_final.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               <div className="card-glass rounded-xl p-6">
                 <h3 className="text-xl font-bold mb-6">Key Metrics</h3>
@@ -497,7 +550,23 @@ const Trade = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Return</span>
-                    <span className="font-mono font-bold">{activeResult.return_percent.toFixed(2)}%</span>
+                    <span className={`font-mono font-bold ${activeResult.return_percent >= 0 ? "text-success" : "text-destructive"}`}>
+                      {activeResult.return_percent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Sharpe Ratio</span>
+                    <span className="font-mono font-bold">{activeResult.sharpe_ratio.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Max Drawdown</span>
+                    <span className="font-mono font-bold text-destructive">
+                      -{activeResult.max_drawdown_percent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Volatility (ann.)</span>
+                    <span className="font-mono font-bold">{activeResult.volatility_percent.toFixed(2)}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Trades</span>
@@ -506,10 +575,6 @@ const Trade = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Win Rate</span>
                     <span className="font-mono font-bold">{activeResult.win_rate_percent.toFixed(1)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Sharpe Ratio</span>
-                    <span className="font-mono font-bold">{activeResult.sharpe_ratio.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Strategy</span>

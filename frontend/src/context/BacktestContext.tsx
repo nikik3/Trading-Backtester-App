@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
+const STORAGE_KEY = 'stockplay_backtest_result';
+
 export interface TradeLogEntry {
   date: string;
   type: string;
@@ -20,6 +22,7 @@ export interface BacktestResult {
   "Return(%)": number;
   "Volatility(%)": number;
   sharpe_ratio: number;
+  "Max Drawdown(%)": number;
   max_trade_duration: string;
   "Avg. Trade Duration": string;
   "No. of trades": number;
@@ -42,8 +45,27 @@ type BacktestContextShape = {
 
 const BacktestContext = createContext<BacktestContextShape | undefined>(undefined);
 
+function loadStoredResult(): any | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const BacktestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResultState] = useState<any | null>(loadStoredResult);
+
+  const setResult = (r: any | null) => {
+    setResultState(r);
+    if (r) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   return (
     <BacktestContext.Provider value={{ result, setResult }}>
       {children}

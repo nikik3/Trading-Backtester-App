@@ -14,6 +14,7 @@ export interface NormalizedBacktestResult {
   return_percent: number;
   volatility_percent: number;
   sharpe_ratio: number;
+  max_drawdown_percent: number;
   max_trade_duration: string;
   avg_trade_duration: string;
   no_of_trades: number;
@@ -65,6 +66,7 @@ export function normalizeBacktestResult(raw: any): NormalizedBacktestResult {
     return_percent: num(raw?.return_percent ?? raw?.["Return(%)"]),
     volatility_percent: num(raw?.volatility_percent ?? raw?.["Volatility(%)"]),
     sharpe_ratio: num(raw?.sharpe_ratio),
+    max_drawdown_percent: num(raw?.max_drawdown_percent ?? raw?.["Max Drawdown(%)"]),
     max_trade_duration: String(raw?.max_trade_duration ?? "N/A"),
     avg_trade_duration: String(raw?.avg_trade_duration ?? raw?.["Avg. Trade Duration"] ?? "N/A"),
     no_of_trades: num(raw?.no_of_trades ?? raw?.["No. of trades"]),
