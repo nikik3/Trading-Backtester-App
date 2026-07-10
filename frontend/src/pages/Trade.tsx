@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { Upload, Play, Database, Brain } from "lucide-react";
+import { Upload, Play, Database, Brain, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
   apiUrl,
   candlestickToCsv,
   computeSma,
+  fetchWithTimeout,
   isMLResponse,
   normalizeApiResponse,
   parseCsvText,
@@ -39,6 +40,7 @@ const Trade = () => {
   const { addTrades, setPortfolioValue } = useTrading();
   const { result, setResult } = useBacktest();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [dataSource, setDataSource] = useState<"none" | "upload" | "sample">("none");
   const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
   const [useML, setUseML] = useState(false);
@@ -118,18 +120,24 @@ const Trade = () => {
   };
 
   const handleUseSampleData = async () => {
+    setIsLoadingSample(true);
+    toast.info("Loading sample data…");
+
     try {
-      const resp = await fetch(apiUrl("/sample_data", apiBaseUrl));
-      if (!resp.ok) throw new Error("Could not fetch sample data from server");
+      // Bundled CSV — works instantly on Vercel without waiting for Render
+      const resp = await fetch("/sample_data.csv");
+      if (!resp.ok) throw new Error("Could not load sample data file");
       const text = await resp.text();
       const data = parseCsvText(text);
-      if (!data.length) throw new Error("Sample file was empty");
+      if (!data.length) throw new Error("Sample file was empty or invalid");
       setCandlestickData(data);
       setDataSource("sample");
       toast.success(`Sample data loaded: ${data.length} data points`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to load sample data";
-      toast.error(`${message}. Is the backend running on port 8000?`);
+      toast.error(message);
+    } finally {
+      setIsLoadingSample(false);
     }
   };
 
@@ -183,7 +191,14 @@ const Trade = () => {
       appendStrategyFields(form);
 
       const path = useML ? "/ml_backtest" : "/backtest";
-      const resp = await fetch(apiUrl(path, apiBaseUrl), { method: "POST", body: form });
+      if (!apiBaseUrl) {
+        throw new Error(
+          "Backend URL not configured. Set VITE_API_URL in Vercel to your Render URL (e.g. https://trading-backtester-app.onrender.com)."
+        );
+      }
+
+      toast.info("Connecting to backend… (Render free tier may take up to 60s to wake up)");
+      const resp = await fetchWithTimeout(apiUrl(path, apiBaseUrl), { method: "POST", body: form });
 
       if (!resp.ok) {
         let message = `Backtest failed (${resp.status})`;
@@ -285,21 +300,29 @@ const Trade = () => {
             </div>
 
             <div
-              className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
+              className={`border-2 rounded-xl p-6 transition-all ${
+                isLoadingSample ? "opacity-70 pointer-events-none" : "cursor-pointer"
+              } ${
                 dataSource === "sample" ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"
               }`}
               onClick={handleUseSampleData}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-lg bg-accent/20 flex items-center justify-center">
-                  <Database className="w-6 h-6 text-accent" />
+                  {isLoadingSample ? (
+                    <Loader2 className="w-6 h-6 text-accent animate-spin" />
+                  ) : (
+                    <Database className="w-6 h-6 text-accent" />
+                  )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Use Sample Data</h3>
-                  <p className="text-sm text-muted-foreground">Full dataset from backend (~5,000 rows)</p>
+                  <h3 className="font-bold text-lg">
+                    {isLoadingSample ? "Loading sample data…" : "Use Sample Data"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">~5,000 rows bundled with the app</p>
                 </div>
               </div>
-              {dataSource === "sample" && (
+              {dataSource === "sample" && !isLoadingSample && (
                 <p className="text-success text-sm">✓ {candlestickData.length} rows loaded</p>
               )}
             </div>

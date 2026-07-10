@@ -140,3 +140,25 @@ export function apiUrl(path: string, baseUrl?: string): string {
   const base = (baseUrl ?? "").replace(/\/$/, "");
   return base ? `${base}${path}` : `/api${path}`;
 }
+
+/** Fetch with timeout — Render free tier can take 60s+ to wake from sleep. */
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = 120_000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(
+        "Request timed out. If using Render free tier, the server may be waking up — wait 60 seconds and try again."
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
